@@ -34,3 +34,27 @@ app-header paper-icon-button {
   color: black;
   font-weight: bold;
 }
+
+/* :host {
+  @apply --layout-horizontal;
+  @apply --layout-justified;
+
+  box-sizing: border-box;
+  background-color: var(--primary-blue);
+  padding: var(--padding-s);
+  width: 100%;
+  color: white;
+}
+
+.navigation .controls{
+ @apply --layout-horizontal;
+ @apply --layout-center;
+}
+
+.navigation h3{
+  margin: 3px 10px 0 ;
+}
+
+paper-item iron-icon{
+  margin-right: var(--padding-s);
+} */
