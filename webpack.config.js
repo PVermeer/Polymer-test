@@ -90,7 +90,7 @@ module.exports = {
     ]),
 
     // Service worker
-    process.env.WEBPACK_SERVE ? new CleanWebpackPlugin() : new GenerateSW({
+    new GenerateSW({
       clientsClaim: true,
       skipWaiting: true,
       navigateFallback: '/index.html',
