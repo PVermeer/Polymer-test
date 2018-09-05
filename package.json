@@ -4,10 +4,11 @@
   "description": "",
   "private": true,
   "scripts": {
-    "postinstall": "npm i -g webpack webpack-serve",
+    "postinstall": "npm i -g webpack webpack-serve && cd functions && npm install",
     "serve": "webpack-serve webpack.config.js --open",
     "build": "webpack --config webpack.config.js",
-    "watch": "webpack-serve --config webpack.config.js --no-reload"
+    "watch": "webpack-serve --config webpack.config.js --no-reload",
+    "deploy": "npm run build && firebase deploy"
   },
   "keywords": [],
   "author": "",
@@ -28,9 +29,12 @@
     "@polymer/paper-menu-button": "^3.0.0-pre.25",
     "@polymer/polymer": "^3.0.5",
     "@webcomponents/webcomponentsjs": "^2.0.4",
-    "firebase": "^5.4.2"
+    "rxjs": "^6.3.1",
+    "web-animations-js": "^2.3.1"
   },
   "devDependencies": {
+    "firebase-admin": "^6.0.0",
+    "firebase": "^5.4.2",
     "bundle-loader": "^0.5.6",
     "clean-webpack-plugin": "^0.1.19",
     "connect-history-api-fallback": "^1.5.0",

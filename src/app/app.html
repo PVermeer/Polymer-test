@@ -3,8 +3,6 @@
                 current-route={{currentRoute}}>
 </router-service>
 
-<firebase-service user={{user}}></firebase-service>
-
 <app-drawer-layout fullbleed=""
                    narrow="{{narrow}}">
 
@@ -37,24 +35,28 @@
                 condenses=""
                 reveals=""
                 effects="waterfall">
-      <app-toolbar>
-        <paper-icon-button icon="my-icons:menu"
-                           drawer-toggle=""></paper-icon-button>
-        <div main-title="">Zzapps App</div>
 
-        <div class="controls">
+      <app-toolbar class="flex-row-between">
+
+        <div class="flex-row-around-center">
+          <paper-icon-button icon="icons:menu"
+                             drawer-toggle=""></paper-icon-button>
+          <div class="text-ellipsis"
+               main-title="">Zzapps App</div>
+        </div>
+
+        <div class="flex-row-around-center">
 
           <dom-if if="[[!userLoggedIn]]">
             <template>
-              <div id="logIn"
+              <div id="login"
                    on-click="login">Log In</div>
             </template>
           </dom-if>
 
           <dom-if if="[[userLoggedIn]]">
             <template>
-
-              <div>[[user.displayName]]</div>
+              <div class="text-ellipsis">[[user.username]]</div>
               <paper-menu-button horizontal-align="right">
                 <paper-icon-button icon="icons:more-vert"
                                    slot="dropdown-trigger"></paper-icon-button>
@@ -62,10 +64,6 @@
                   <paper-item>
                     <iron-icon icon="icons:language"></iron-icon>
                     Taal wijzigen
-                  </paper-item>
-                  <paper-item>
-                    <iron-icon icon="icons:close"></iron-icon>
-                    Onbeschikbaar veiligheidsfiche
                   </paper-item>
                   <paper-item>
                     <iron-icon icon="icons:record-voice-over"></iron-icon>
@@ -90,6 +88,7 @@
       <app-view1 name="view1"></app-view1>
       <app-view2 name="view2"></app-view2>
       <app-view3 name="view3"></app-view3>
+      <app-view404 name="view404"></app-view404>
     </iron-pages>
 
   </app-header-layout>

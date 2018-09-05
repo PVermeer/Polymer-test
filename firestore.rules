@@ -1,7 +1,9 @@
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Match domains collection: authentication, document: acceptedDomains, key: domains, value: ['zzapps.nl', '...']
     match /{document=**} {
-      allow read, write;
+      allow read, write: if request.auth.token.email.split('@')[1] in get(/databases/$(database)/documents/authentication/acceptedDomains).data.domains;
     }
   }
 }

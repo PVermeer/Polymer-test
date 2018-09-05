@@ -1,5 +1,5 @@
 {
   "projects": {
-    "default": "polymer-webpack-test"
+    "default": "polymer-3-tscript-webpack"
   }
 }

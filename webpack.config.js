@@ -7,7 +7,7 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const { GenerateSW } = require('workbox-webpack-plugin');
 
 module.exports = {
-  entry: './src/app/app.ts',
+  entry: './src/index.ts',
   mode: process.env.WEBPACK_SERVE ? 'development' : 'production',
   devtool: process.env.WEBPACK_SERVE ? 'inline-source-map' : 'nosources-source-map',
   output: {
@@ -68,6 +68,16 @@ module.exports = {
 
     new CopyWebpackPlugin([
       {
+        from: resolve(__dirname, './node_modules/@webcomponents'),
+        to: './@webcomponents',
+        ignore: ['.*']
+      },
+      {
+        from: resolve(__dirname, './node_modules/web-animations-js'),
+        to: './web-animations-js',
+        ignore: ['.*']
+      },
+      {
         from: resolve(__dirname, './src/index.html'),
         to: '.',
         ignore: ['.*']
@@ -94,6 +104,7 @@ module.exports = {
       clientsClaim: true,
       skipWaiting: true,
       navigateFallback: '/index.html',
+      navigateFallbackBlacklist: [/^\/_/],
       runtimeCaching: [
         {
           urlPattern: /\.(?:png|jpg|jpeg|svg)$/,

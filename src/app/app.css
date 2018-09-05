@@ -35,26 +35,31 @@ app-header paper-icon-button {
   font-weight: bold;
 }
 
-/* :host {
-  @apply --layout-horizontal;
-  @apply --layout-justified;
-
-  box-sizing: border-box;
-  background-color: var(--primary-blue);
-  padding: var(--padding-s);
-  width: 100%;
-  color: white;
+iron-icon {
+  margin: 0 5px;
 }
 
-.navigation .controls{
- @apply --layout-horizontal;
- @apply --layout-center;
+.flex-row-between {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-content: center;
 }
 
-.navigation h3{
-  margin: 3px 10px 0 ;
+.flex-row-around-center {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  flex-flow: row nowrap;
+  overflow: hidden;
 }
 
-paper-item iron-icon{
-  margin-right: var(--padding-s);
-} */
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#login, paper-item {
+  cursor: pointer;
+}

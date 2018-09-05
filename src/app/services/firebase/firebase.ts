@@ -1,59 +1,39 @@
-import { customElement, property } from '@polymer/decorators';
-import { PolymerElement, html } from '@polymer/polymer';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import { BehaviorSubject } from 'rxjs';
+import { config } from '../../../config';
 import { SomeDoc, SomeDocRef, UserDb } from './types';
+import { AddedDomain } from '../../../types/functions';
 
-const config = {
-  apiKey: 'AIzaSyCo2KHYejiPSWy87d3sj-VZwQH1WH2nync',
-  authDomain: 'polymer-webpack-test.firebaseapp.com',
-  databaseURL: 'https://polymer-webpack-test.firebaseio.com',
-  projectId: 'polymer-webpack-test',
-  storageBucket: 'polymer-webpack-test.appspot.com',
-  messagingSenderId: '156679740222'
+firebase.initializeApp(config.firebase);
+
+const firebaseComponents = {
+  fireAuth: firebase.auth(),
+  firestore: firebase.firestore()
 };
-firebase.initializeApp(config);
 
-@customElement('firebase-service')
-export class FirebaseService extends PolymerElement {
+// Convert firebase observers to rxjs observable
+firebaseComponents.fireAuth.onAuthStateChanged(async user => {
+  if (!user) { firebaseService.fireAuth.user = null; return; }
+  firebaseService.fireAuth.user = await firebaseService.firestore.getUser(user.uid);
+});
 
-  @property({ type: Object, notify: true })
-  public user: UserDb | null;
+class FirebaseService {
 
   // Public
   public firestore: Firestore;
   public fireAuth: FireAuth;
 
-  // Authentication
-  public async login() {
-    this.user = await this.fireAuth.loginGoogle();
-  }
-  public async logout() {
-    this.user = await this.fireAuth.logout();
-  }
-
   // Life cycle
   constructor() {
-    super();
-    this.firestore = new Firestore;
-    this.fireAuth = new FireAuth;
-  }
-
-  // Template
-  static get template() {
-    return html`
-      <fire-auth user="{{user}}"></fire-auth>
-    `;
+    this.firestore = new Firestore(firebaseComponents.firestore);
+    this.fireAuth = new FireAuth(firebaseComponents.fireAuth);
   }
 
 }
 
 class Firestore {
-
-  // Variables
-  private firestore: firebase.firestore.Firestore;
-  private fireStoreSettings = { timestampsInSnapshots: true };
 
   // Collections
   private someCollection: firebase.firestore.CollectionReference;
@@ -95,7 +75,7 @@ class Firestore {
     });
   }
 
-  public getAllProducts() {
+  public getAllDocuments() {
     return this.someCollection.get().then(docs => {
       if (docs.empty) { return []; }
       const docArray: SomeDocRef[] = [];
@@ -109,7 +89,7 @@ class Firestore {
     });
   }
 
-  public updateProduct(product: SomeDocRef) {
+  public updateDocument(product: SomeDocRef) {
     const reference = this.someCollection.doc(product.ref);
     // TODO wont't resolve incase offline?
     return reference.update(product.data)
@@ -125,46 +105,65 @@ class Firestore {
 
   // Private class methods
   private initializeFirestore() {
-    this.firestore = firebase.firestore();
-    this.firestore.settings(this.fireStoreSettings);
+    this.firestore.settings({ timestampsInSnapshots: true });
   }
   private defineCollections() {
     this.userCollection = this.firestore.collection('users');
-    this.someCollection = this.firestore.collection('products');
+    this.someCollection = this.firestore.collection('documents');
+  }
+  private startup() {
+    // Check if zzapps.nl is authorized in firestore.
+    fetch(`${config.cloudfunctionsUrl}/domain`)
+      .then(async response => {
+        const body: AddedDomain = await response.json();
+        if (body.addedDomain) { console.log('Added zzapps.nl to accepted domains in firestore'); }
+        // Check for CORS
+        if (body.cors) { console.warn('Cors is enabled server-side, keep that in mind :)'); }
+      });
   }
 
   // Life cycle
-  constructor() {
+  constructor(
+    private firestore: firebase.firestore.Firestore
+  ) {
     this.initializeFirestore();
     this.defineCollections();
+    this.startup();
   }
 
 }
 
 class FireAuth {
 
+  // Observable sources
+  private userSource = new BehaviorSubject<UserDb | null>(null);
+
+  // Observables
+  public user$ = this.userSource.asObservable();
+
+  public set user(user: UserDb | null) {
+    this.userSource.next(user);
+  }
+
   // Variables
-  public auth: firebase.auth.Auth;
   private googleProvider: firebase.auth.GoogleAuthProvider;
-  private firestore: Firestore;
 
   // Public database methods
   public async loginGoogle() {
     return this.auth.signInWithPopup(this.googleProvider).then(async response => {
-      if (!response.user) {
-        return null;
-      }
+      if (!response.user) { return; }
       const userLogin = response.user;
-      const userDb = await this.firestore.getUser(userLogin.uid);
+      const userDb = await firebaseService.firestore.getUser(userLogin.uid);
 
-      this.firestore.setUser({
+      firebaseService.firestore.setUser({
         userId: userLogin.uid,
         email: userLogin.email ? userLogin.email : '',
         username: userLogin.displayName ? userLogin.displayName : '',  // Do something with !username
         userType: userDb ? userDb.userType : 'user'
       });
 
-      return this.firestore.getUser(userLogin.uid);
+      const setUser = await firebaseService.firestore.getUser(userLogin.uid);
+      this.userSource.next(setUser);
     }); // TODO Do something with errors
   }
 
@@ -174,10 +173,6 @@ class FireAuth {
   }
 
   // Private class methods
-  private initializeFireAuth() {
-    this.auth = firebase.auth();
-  }
-
   private defineProviders() {
     this.googleProvider = new firebase.auth.GoogleAuthProvider();
     this.googleProvider.setCustomParameters({
@@ -187,87 +182,12 @@ class FireAuth {
   }
 
   // Life cycle
-  constructor() {
-    this.initializeFireAuth();
+  constructor(
+    private auth: firebase.auth.Auth
+  ) {
     this.defineProviders();
-
-    this.firestore = new Firestore;
   }
 
 }
 
-// const testProduct = {
-//   vibNr: '000000229456',
-//   vibNaamBenelux: 'PerformaxTM CL1300',
-//   versie: 1.7,
-//   datum: new Date(),
-//   vorige: new Date(),
-//   bron: 'Solenis',
-//   un: 1719,
-//   properShippingNameNl: 'BIJTENDE ALKALISCHE VLOEISTOF, N.E.G. (KALIUMHYDROXIDE)',
-//   properShippingNameFr: 'LIQUIDE ALCALIN CAUSTIQUE, N.S.A. (HYDROXYDE DE POTASSIUM)',
-//   properShippingNameEn: '',
-//   hNr: ['H290', 'H314', 'H317'],
-//   pNr:
-//     ['P261',
-//       'P280',
-//       'P301 + P330 + P331',
-//       'P303 + P361 + P353',
-//       'P304 + P340 + P310',
-//       'P305 + P351 + P338 + P310'],
-//   signalwordNl: 'Gevaar',
-//   signalwordFr: 'Danger',
-//   signalwordEn: '',
-//   vibTeksNl: 'PerformaxTM CL1300',
-//   vibTekstFr: 'PerformaxTM CL1300 TRAITEMENT DE SYSTÈMES FERMÉS',
-//   vibTekstEn: '',
-//   egNummer: '',
-//   casNummer: '',
-//   eNummerEn: '',
-//   formule: '',
-//   grenswaarde8uur: '',
-//   grenswaarde15minuten: '',
-//   noodnummer: ['00 800-7653-6471', '070 245 245'],
-//   lc50: '',
-//   cmrIndeling: '',
-//   stofCategorie: 'LNR',
-//   opmerkingSevesoIII: '',
-//   sevesoIIIIndeling: [''],
-//   klasseCmrTox: 4,
-//   klasseFire: '',
-//   klasseEnvironment: 4,
-//   klasseIndelingNotes:
-//     ['CMR class 3 because of H317',
-//       'CMR class 4 because of H314',
-//       'Environment class 4 because of H314',
-//       'Environment class 4 because of H317'],
-//   colourProduct: '',
-//   odourProduct: '',
-//   adrClp: ['ADR8', 'GHS05', 'GHS07'],
-//   state: null,
-//   mixOf: []
-// };
-
-// const test = new FirebaseService;
-// const test2 = test.firestore.addProduct(testProduct).then(x => {
-//   console.log(x);
-// });
-
-// const test3 = test.firestore.getAllProducts().then(x => {
-//   console.log(x);
-// });
-
-// setTimeout(() => {
-//   test.firestore.updateProduct({ ref: '5G7RjkMnMnWMkADf60y9', data: testProduct }).then(x => {
-//     console.log(x);
-//   });
-// }, 2000);
-
-
-// service cloud.firestore {
-//   match /databases/{database}/documents {
-//     match /{document=**} {
-//       allow read, write: if request.auth.token.email.split('@')[1] in get(/databases/$(database)/documents/authentication/acceptedDomains).data.domains;
-//     }
-//   }
-// }
+export const firebaseService = new FirebaseService;

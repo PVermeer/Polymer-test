@@ -3,7 +3,7 @@ export const AppGlobals = { rootPath: '/' };
 
 // Load and register pre-caching Service Worker
 export function serviceWorker() {
-  if (location.hostname === 'localhost') { console.log('I\'ve disabled the service worker on localhost'); }
+  if (location.hostname === 'localhost') { console.warn('I\'ve disabled the service worker on localhost'); }
   if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
@@ -25,4 +25,3 @@ export function template(strings: any, ...values: any[]) {
     acc + v + strings[idx + 1], strings[0]);
   return template2;
 }
-

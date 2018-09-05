@@ -1,9 +1,6 @@
 .vscode
-.DS_Store
-public
-build
 node_modules
-GEOPJG
 dist/
 *.code-workspace
 .firebase/
+

@@ -1,5 +1,5 @@
 import { PolymerElement } from '@polymer/polymer/polymer-element.js';
-import * as sharedStyles from '../shared-styles.css';
+import * as sharedStyles from '../../shared-styles.css';
 import * as styles from './view3.css';
 import * as view from './view3.html';
 import { customElement } from '@polymer/decorators';
