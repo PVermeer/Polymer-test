@@ -1,4 +1,4 @@
-# Zzapps Polymer 3 TypeScript Webpack template
+# Polymer 3 TypeScript Webpack template
 
 ## Includes:
 - Firebase as service with RxJs
